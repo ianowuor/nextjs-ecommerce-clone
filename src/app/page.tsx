@@ -8,6 +8,8 @@ import { browseCategories } from "@/constants/categories";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import SectionHeader from "@/components/ecommerce/SectionHeader";
 import PromoBanner from "@/components/ecommerce/PromoBanner";
+import NewArrival from "@/components/ecommerce/NewArrival";
+import ServicesInfo from "@/components/ecommerce/ServicesInfo";
 
 // Mock Data for Flash Sales
 const flashSaleProducts = [
@@ -57,7 +59,7 @@ const bestSellingProducts = [
 ];
 
 const exploreProducts = [
-  { name: "Breed Dry Dog Food", price: 100, rating: 3, reviews: 35, image: "/images/dog-food.png" },
+  { name: "Breed Dry Dog Food", price: 100, rating: 3, reviews: 35, image: "/images/dog-food.jpg" },
   { name: "CANON EOS DSLR Camera", price: 360, rating: 4, reviews: 95, image: "/images/camera.png" },
   { name: "ASUS FHD Gaming Laptop", price: 700, rating: 5, reviews: 325, image: "/images/laptop.png" },
   { name: "Curology Product Set", price: 500, rating: 4, reviews: 145, image: "/images/curology.png" },
@@ -244,6 +246,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      <NewArrival/>
+
+      <ServicesInfo />
     </div>
   );
 }

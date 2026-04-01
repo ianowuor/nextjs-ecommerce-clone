@@ -1,6 +1,7 @@
 import "./globals.css";
 import TopHeader from "@/components/layout/TopHeader";
 import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,6 +10,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <TopHeader />
         <Header />
         <main>{children}</main>
+        <Footer/>
       </body>
     </html>
   );

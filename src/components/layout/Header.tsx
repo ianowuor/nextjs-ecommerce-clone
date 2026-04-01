@@ -40,7 +40,8 @@ export default function Header() {
           <div className="flex items-center gap-[16px]">
             <Heart className="w-[32px] h-[32px] cursor-pointer" />
             <div className="relative">
-              <ShoppingCart className="w-[32px] h-[32px] cursor-pointer" />
+              
+                <ShoppingCart className="w-[32px] h-[32px] cursor-pointer" />
               {/* Optional: Add a small badge here if your Figma shows one */}
             </div>
           </div>
