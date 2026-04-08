@@ -1,8 +1,35 @@
 /* src/app/signup/page.tsx */
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+import { register } from "@/lib/api";
 
 export default function SignUpPage() {
+  const router = useRouter();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      await register({
+        full_name: fullName,
+        email,
+        password,
+      });
+      router.push("/login");
+    } catch (err) {
+      setError((err as Error).message ?? "Signup failed");
+    }
+  };
+
   return (
     <div className="flex flex-col lg:flex-row items-center gap-[129px] pt-[60px] mb-[140px]">
       
@@ -23,21 +50,27 @@ export default function SignUpPage() {
         <h1 className="text-[36px] font-medium leading-[48px] tracking-[4%] mb-6">Create an account</h1>
         <p className="text-[16px] mb-12">Enter your details below</p>
 
-        <form className="flex flex-col gap-10">
+        <form className="flex flex-col gap-10" onSubmit={onSubmit}>
           <input 
             type="text" 
             placeholder="Name" 
             className="border-b border-black/50 pb-2 outline-none focus:border-[#DB4444] transition-colors" 
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
           />
           <input 
             type="email" 
             placeholder="Email or Phone Number" 
             className="border-b border-black/50 pb-2 outline-none focus:border-[#DB4444] transition-colors" 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
           <input 
             type="password" 
             placeholder="Password" 
             className="border-b border-black/50 pb-2 outline-none focus:border-[#DB4444] transition-colors" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
           
           <div className="flex flex-col gap-4 mt-2">
@@ -49,6 +82,8 @@ export default function SignUpPage() {
               <span>Sign up with Google</span>
             </button>
           </div>
+
+          {error && <p className="text-red-600 text-[14px] mt-2">{error}</p>}
         </form>
 
         <div className="mt-8 flex justify-center gap-4 text-[16px]">

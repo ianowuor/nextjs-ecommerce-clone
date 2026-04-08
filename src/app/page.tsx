@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import { categories } from "@/constants/categories";
@@ -10,66 +12,90 @@ import SectionHeader from "@/components/ecommerce/SectionHeader";
 import PromoBanner from "@/components/ecommerce/PromoBanner";
 import NewArrival from "@/components/ecommerce/NewArrival";
 import ServicesInfo from "@/components/ecommerce/ServicesInfo";
+import { useEffect, useState } from "react";
+import { getProducts, addToCart, type Product } from "@/lib/api";
+import Link from "next/link";
 
-// Mock Data for Flash Sales
-const flashSaleProducts = [
-  {
-    name: "HAVIT HV-G92 Gamepad",
-    price: 120,
-    oldPrice: 160,
-    discount: "-40%",
-    rating: 5,
-    reviews: 88,
-    image: "/images/gamepad.png"
-  },
-  {
-    name: "AK-900 Wired Keyboard",
-    price: 960,
-    oldPrice: 1160,
-    discount: "-35%",
-    rating: 4,
-    reviews: 75,
-    image: "/images/keyboard.png"
-  },
-  {
-    name: "IPS LCD Gaming Monitor",
-    price: 370,
-    oldPrice: 400,
-    discount: "-30%",
-    rating: 5,
-    reviews: 99,
-    image: "/images/monitor.png"
-  },
-  {
-    name: "S-Series Comfort Chair",
-    price: 375,
-    oldPrice: 400,
-    discount: "-25%",
-    rating: 4,
-    reviews: 99,
-    image: "/images/chair.png"
-  },
-];
-
-const bestSellingProducts = [
-  { name: "The north coat", price: 260, oldPrice: 360, rating: 5, reviews: 65, image: "/images/coat.png" },
-  { name: "Gucci duffle bag", price: 960, oldPrice: 1160, rating: 4, reviews: 65, image: "/images/bag.png" },
-  { name: "RGB liquid CPU Cooler", price: 160, oldPrice: 170, rating: 4, reviews: 65, image: "/images/cooler.png" },
-  { name: "Small BookSelf", price: 360, oldPrice: 0, rating: 5, reviews: 65, image: "/images/shelf.png" },
-];
-
-const exploreProducts = [
-  { name: "Breed Dry Dog Food", price: 100, rating: 3, reviews: 35, image: "/images/dog-food.jpg" },
-  { name: "CANON EOS DSLR Camera", price: 360, rating: 4, reviews: 95, image: "/images/camera.png" },
-  { name: "ASUS FHD Gaming Laptop", price: 700, rating: 5, reviews: 325, image: "/images/laptop.png" },
-  { name: "Curology Product Set", price: 500, rating: 4, reviews: 145, image: "/images/curology.png" },
-  { name: "Kids Electric Car", price: 960, rating: 5, reviews: 65, image: "/images/car.png", isNew: true, colors: ["#FF0000", "#000000"] },
-  { name: "Jr. Zoom Soccer Cleats", price: 1160, rating: 5, reviews: 35, image: "/images/cleats.png", colors: ["#FFFF00", "#FF0000"] },
-  { name: "GP11 Gamepad", price: 660, rating: 4, reviews: 55, image: "/images/gp11.png", isNew: true, colors: ["#000000", "#DB4444"] },
-  { name: "Quilted Satin Jacket", price: 660, rating: 4, reviews: 55, image: "/images/jacket.png", colors: ["#18202F", "#DB4444"] },
-];
+// Helper function to transform API product to component format
+function transformProduct(product: Product) {
+  return {
+    id: product.id,
+    name: product.name,
+    price: Number(product.price),
+    image: product.image_url,
+    rating: Math.floor(Math.random() * 2) + 4, // Random rating 4-5 for demo
+    reviews: Math.floor(Math.random() * 100) + 10, // Random reviews for demo
+  };
+}
 
 export default function HomePage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        const data = await getProducts();
+        setProducts(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load products");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
+  const handleAddToCart = async (productId: number) => {
+    try {
+      await addToCart(productId, 1);
+      // You could show a success toast here
+      console.log("Product added to cart");
+    } catch (err) {
+      console.error("Failed to add to cart:", err);
+      // You could show an error toast here
+    }
+  };
+
+  // Get first 4 products for flash sales
+  const flashSaleProducts = products.slice(0, 4).map(product => ({
+    ...transformProduct(product),
+    oldPrice: Number(product.price) * 1.3, // 30% higher for demo
+    discount: "-30%",
+  }));
+
+  // Get next 4 products for best selling
+  const bestSellingProducts = products.slice(4, 8).map(product => ({
+    ...transformProduct(product),
+    oldPrice: Number(product.price) * 1.2, // 20% higher for demo
+  }));
+
+  // Get next 8 products for explore section
+  const exploreProducts = products.slice(8, 16).map(product => ({
+    ...transformProduct(product),
+    isNew: Math.random() > 0.7, // 30% chance of being new
+    colors: Math.random() > 0.5 ? ["#FF0000", "#000000", "#DB4444"] : undefined,
+  }));
+
+  if (loading) {
+    return (
+      <div className="max-w-[1170px] mx-auto px-4 xl:px-0 py-20">
+        <div className="text-center">Loading products...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-[1170px] mx-auto px-4 xl:px-0 py-20">
+        <div className="text-center text-red-600">Error: {error}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-[1170px] mx-auto px-4 xl:px-0 mb-[140px]">
 
@@ -148,16 +174,20 @@ export default function HomePage() {
 
         {/* Product Slider Container */}
         <div className="flex gap-[30px] overflow-x-auto no-scrollbar pb-[20px]">
-          {flashSaleProducts.map((product, index) => (
-            <ProductCard key={index} {...product} />
+          {flashSaleProducts.map((product) => (
+            <ProductCard 
+              key={product.id} 
+              {...product} 
+              onAddToCart={handleAddToCart}
+            />
           ))}
         </div>
 
         {/* View All Button */}
         <div className="flex justify-center mt-[60px]">
-          <button className="bg-[#DB4444] text-white px-[48px] py-[16px] rounded-[4px] font-medium hover:bg-[#E07575] transition-colors leading-[24px]">
+          <Link href="/shop" className="bg-[#DB4444] text-white px-[48px] py-[16px] rounded-[4px] font-medium hover:bg-[#E07575] transition-colors leading-[24px]">
             View All Products
-          </button>
+          </Link>
         </div>
       </section>
 
@@ -202,8 +232,12 @@ export default function HomePage() {
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[30px]">
-          {bestSellingProducts.map((product, index) => (
-            <ProductCard key={index} {...product} />
+          {bestSellingProducts.map((product) => (
+            <ProductCard 
+              key={product.id} 
+              {...product} 
+              onAddToCart={handleAddToCart}
+            />
           ))}
         </div>
       </section>
@@ -233,16 +267,20 @@ export default function HomePage() {
 
         {/* 8-Item Grid (2 rows of 4) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-[30px] gap-y-[60px]">
-          {exploreProducts.map((product, index) => (
-            <ProductCard key={index} {...product} />
+          {exploreProducts.map((product) => (
+            <ProductCard 
+              key={product.id} 
+              {...product} 
+              onAddToCart={handleAddToCart}
+            />
           ))}
         </div>
 
         {/* Centered View All Button */}
         <div className="flex justify-center mt-[60px]">
-          <button className="bg-[#DB4444] text-white px-[48px] py-[16px] rounded-[4px] font-medium hover:bg-[#E07575] transition-colors leading-[24px]">
+          <Link href="/shop" className="bg-[#DB4444] text-white px-[48px] py-[16px] rounded-[4px] font-medium hover:bg-[#E07575] transition-colors leading-[24px]">
             View All Products
-          </button>
+          </Link>
         </div>
       </section>
 

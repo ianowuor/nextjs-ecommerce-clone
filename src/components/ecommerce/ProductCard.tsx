@@ -2,20 +2,25 @@
 import Image from "next/image";
 import { Heart, Eye, Star, Trash2, ShoppingCart } from "lucide-react";
 
+const PLACEHOLDER_IMAGE = "/images/placeholder-product.png";
+
 interface ProductProps {
+  id?: number;
   name: string;
   price: number;
   oldPrice?: number;
   discount?: string;
   rating?: number;
   reviews?: number;
-  image: string;
+  image: string | null | undefined; // Allow null or undefined
   isNew?: boolean;
   colors?: string[];
-  isWishlist?: boolean; // New prop to toggle wishlist mode
+  isWishlist?: boolean;
+  onAddToCart?: (productId: number) => void;
 }
 
 export default function ProductCard({ 
+  id,
   name, 
   price, 
   oldPrice, 
@@ -25,8 +30,13 @@ export default function ProductCard({
   image, 
   isNew, 
   colors,
-  isWishlist = false 
+  isWishlist = false,
+  onAddToCart,
 }: ProductProps) {
+  const canAddToCart = typeof id === "number" && typeof onAddToCart === "function";
+
+  const validImageSrc = (image && image.trim() !== "") ? image : PLACEHOLDER_IMAGE;
+
   return (
     <div className="w-full group cursor-pointer mb-[30px]">
       {/* Image & Overlay Area */}
@@ -68,21 +78,31 @@ export default function ProductCard({
 
         {/* Product Image */}
         <div className="relative w-[170px] h-[150px]">
+          {/* We only render the Image if we have a valid source to prevent the crash */}
           <Image 
-            src={image} 
-            alt={name} 
+            src={validImageSrc} 
+            alt={name || "Product Image"} 
             fill 
             className="object-contain group-hover:scale-110 transition-transform duration-300" 
+            sizes="170px"
+            // Adding unoptimized={true} helps if your backend is serving images 
+            // from a local folder that isn't configured in next.config.js yet
+            unoptimized={validImageSrc.startsWith('http') || validImageSrc.startsWith('/uploads')}
           />
         </div>
         
         {/* Add to Cart Bar */}
         {/* If wishlist: always visible at bottom. If home: slides up on hover. */}
-        <button className={`absolute bottom-0 w-full bg-black text-white py-2 flex items-center justify-center gap-2 font-medium transition-all duration-300 ${
-          isWishlist 
-            ? "translate-y-0 opacity-100" 
-            : "translate-y-full group-hover:translate-y-0"
-        }`}>
+        <button
+          type="button"
+          onClick={() => {
+            if (canAddToCart && id) onAddToCart(id);
+          }}
+          disabled={!canAddToCart}
+          className={`absolute bottom-0 w-full bg-black text-white py-2 flex items-center justify-center gap-2 font-medium transition-all duration-300 ${
+            isWishlist ? "translate-y-0 opacity-100" : "translate-y-full group-hover:translate-y-0"
+          } ${canAddToCart ? "" : "opacity-50 cursor-not-allowed"}`}
+        >
           <ShoppingCart className="w-4 h-4" />
           <span className="text-[12px]">Add To Cart</span>
         </button>

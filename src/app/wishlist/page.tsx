@@ -1,4 +1,5 @@
-/* src/app/wishlist/page.tsx */
+"use client"; // Added this to enable interactivity and Client Component props
+
 import ProductCard from "@/components/ecommerce/ProductCard";
 
 const wishlistItems = [

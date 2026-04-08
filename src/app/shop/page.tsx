@@ -1,19 +1,37 @@
 /* src/app/shop/page.tsx */
+/* eslint-disable @next/next/no-img-element */
+"use client";
+
+import { useEffect, useState } from "react";
+
 import Breadcrumb from "@/components/common/Breadcrumbs";
 import ProductCard from "@/components/ecommerce/ProductCard";
-
-const products = [
-  { id: 1, name: "Gucci duffle bag", price: 960, oldPrice: 1160, rating: 4.5, reviews: 65, discount: "-20%", image: "/images/bag.png" },
-  { id: 2, name: "RGB liquid CPU Cooler", price: 160, oldPrice: 170, rating: 4.8, reviews: 85, image: "/images/cooler.png" },
-  { id: 3, name: "GP11 Gamepad", price: 660, rating: 4.2, reviews: 55, isNew: true, image: "/images/gamepad-black.png" },
-  { id: 4, name: "Quilted Satin Jacket", price: 660, rating: 4.9, reviews: 95, image: "/images/jacket.png" },
-  { id: 5, name: "ASUS FHD Gaming Laptop", price: 700, rating: 5, reviews: 325, image: "/images/laptop.png" },
-  { id: 6, name: "Curology Product Set", price: 500, rating: 4.0, reviews: 145, image: "/images/curology.png" },
-  { id: 7, name: "Kids Electric Car", price: 960, isNew: true, rating: 5, reviews: 65, image: "/images/car.png" },
-  { id: 8, name: "Jr. Zoom Terrex Hiking Shoes", price: 1160, rating: 4.8, reviews: 45, image: "/images/shoes.png" },
-];
+import { type Product, addToCart, getProducts } from "@/lib/api";
 
 export default function ShopPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [cartAddError, setCartAddError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getProducts()
+      .then((data) => {
+        if (!cancelled) setProducts(data);
+      })
+      .catch((e) => {
+        if (!cancelled) setError((e as Error).message ?? "Failed to load products");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <div className="max-w-[1170px] mx-auto px-4 xl:px-0 mb-[140px]">
       <Breadcrumb items={[{ label: "Shop", href: "/shop" }]} />
@@ -72,11 +90,34 @@ export default function ShopPage() {
             </select>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-[30px] gap-y-[60px]">
-            {products.map((product) => (
-              <ProductCard key={product.id} {...product} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="py-10 text-center">Loading products...</div>
+          ) : error ? (
+            <div className="py-10 text-center text-red-600">{error}</div>
+          ) : (
+            <>
+              {cartAddError && <div className="py-4 text-center text-red-600">{cartAddError}</div>}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-[30px] gap-y-[60px]">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  price={Number(product.price)}
+                  image={product.image_url ?? "/images/placeholder.png"}
+                  onAddToCart={async () => {
+                    setCartAddError(null);
+                    try {
+                      await addToCart(product.id, 1);
+                    } catch (e) {
+                      setCartAddError((e as Error).message ?? "Failed to add to cart");
+                    }
+                  }}
+                />
+              ))}
+            </div>
+            </>
+          )}
 
           {/* Pagination */}
           <div className="mt-[60px] flex justify-center gap-4">
